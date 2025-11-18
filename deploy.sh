@@ -3,6 +3,11 @@
 # Run this after cloning the template to configure a new project
 set -e
 
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "❌ This script must be run inside a Git repository."
+  exit 1
+fi
+
 # --- Get Project Details ---
 read -p "Enter new repository name: " REPO_NAME
 read -p "Enter GitHub username: " GITHUB_USERNAME
@@ -30,57 +35,106 @@ EOL
 
 echo "✅ .env created"
 
-# --- Git Setup ---
-echo "📦 Updating Git remote..."
+# --- Git Branch Preparation ---
+echo "📦 Preparing Git branches..."
+git checkout main >/dev/null 2>&1 || git checkout -b main >/dev/null 2>&1
+git branch -M main
+git checkout -B development >/dev/null 2>&1
+git checkout main >/dev/null 2>&1
+
+# --- Remote & Repository Setup ---
 git remote remove origin 2>/dev/null || true
 
-# Check if SSH is available (GitHub returns a specific message when auth succeeds)
-SSH_CHECK=$(ssh -T git@github.com 2>&1 || true)
-if echo "$SSH_CHECK" | grep -q "successfully authenticated"; then
-  SSH_AVAILABLE=true
-  GIT_URL="git@github.com:${GITHUB_USERNAME}/${REPO_NAME}.git"
+REMOTE_SET=false
+GH_USED=false
+PUSHED_MAIN=false
+PUSHED_DEV=false
+SSH_AVAILABLE=false
+
+if command -v gh >/dev/null 2>&1; then
+  read -p "Create GitHub repo as private? (Y/n): " PRIVATE_CHOICE
+  if [[ "$PRIVATE_CHOICE" =~ ^[Nn]$ ]]; then
+    VISIBILITY_FLAG="--public"
+    echo "🔓 Repository will be public."
+  else
+    VISIBILITY_FLAG="--private"
+    echo "🔒 Repository will be private."
+  fi
+
+  echo "🌐 Creating GitHub repository via gh..."
+  if gh repo create "${GITHUB_USERNAME}/${REPO_NAME}" ${VISIBILITY_FLAG} \
+      --source=. --remote=origin --push --branch main; then
+    REMOTE_SET=true
+    GH_USED=true
+    PUSHED_MAIN=true
+    echo "✅ GitHub repository created and main branch pushed."
+  else
+    echo "⚠️ gh repo create failed. Falling back to manual remote setup."
+  fi
 else
-  SSH_AVAILABLE=false
-  GIT_URL="https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git"
+  echo "⚠️ GitHub CLI (gh) not found. Falling back to manual remote setup."
 fi
 
-git remote add origin "$GIT_URL"
-git branch -M main
+if [ "$REMOTE_SET" = false ]; then
+  echo "📎 Configuring remote manually..."
+  SSH_CHECK=$(ssh -T git@github.com 2>&1 || true)
+  if echo "$SSH_CHECK" | grep -qi "successfully authenticated"; then
+    SSH_AVAILABLE=true
+    GIT_URL="git@github.com:${GITHUB_USERNAME}/${REPO_NAME}.git"
+    echo "🔑 SSH access detected. Using SSH remote."
+  else
+    SSH_AVAILABLE=false
+    GIT_URL="https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git"
+    echo "ℹ️  SSH access not detected. Using HTTPS remote."
+  fi
+  git remote add origin "$GIT_URL"
+  REMOTE_SET=true
+fi
 
-# Create development branch
-git checkout -b development
+# Ensure development branch exists and finish on it
+git checkout -B development >/dev/null 2>&1
+git checkout main >/dev/null 2>&1
 
+if [ "$GH_USED" = true ]; then
+  git checkout development >/dev/null 2>&1
+  echo "📤 Pushing development branch..."
+  git push -u origin development
+  PUSHED_DEV=true
+elif [ "$SSH_AVAILABLE" = true ]; then
+  git checkout development >/dev/null 2>&1
+  echo "🔁 Push branches to GitHub now via SSH? (y/n)"
+  read -p "Push now? " PUSH_NOW
+  if [[ "$PUSH_NOW" =~ ^[Yy]$ ]]; then
+    git checkout main >/dev/null 2>&1
+    git push -u origin main
+    git checkout development >/dev/null 2>&1
+    git push -u origin development
+    PUSHED_MAIN=true
+    PUSHED_DEV=true
+    echo "✅ Branches pushed successfully."
+  else
+    echo "⏭️  Skipping push for now."
+  fi
+else
+  git checkout development >/dev/null 2>&1
+fi
+
+# --- Final Instructions ---
 echo ""
 echo "✅ Setup complete!"
 echo "--------------------------------------------------"
-
-# Push to GitHub
-if [ "$SSH_AVAILABLE" = true ]; then
-  echo "🔑 SSH detected. Push to GitHub? (y/n)"
-  read -p "Push now? " PUSH_NOW
-
-  if [[ "$PUSH_NOW" =~ ^[Yy]$ ]]; then
-    echo "📤 Pushing to GitHub..."
-    git push -u origin main
-    git push -u origin development
-    echo "✅ Pushed successfully!"
-  else
-    echo "⏭️  Skipping push. Push manually later:"
-    echo "   git push -u origin main"
-    echo "   git push -u origin development"
-  fi
-else
-  echo "ℹ️  SSH not configured. Push manually:"
-  echo "   git push -u origin main"
-  echo "   git push -u origin development"
+if [ "$PUSHED_MAIN" = false ] || [ "$PUSHED_DEV" = false ]; then
+  echo "🔔 Remember to push when ready:"
+  echo "     git push -u origin main"
+  echo "     git push -u origin development"
+  echo ""
 fi
-
-echo ""
 echo "Next steps:"
-echo "  1. Start development (on development branch):"
+echo "  1. Start development (you are on 'development' branch):"
 echo "     ./dev.sh"
 echo ""
-echo "  2. Access:"
-echo "     Frontend: http://localhost:$FRONTEND_PORT"
-echo "     Backend: http://localhost:$BACKEND_PORT"
+echo "  2. Access services:"
+echo "     Frontend:  http://localhost:$FRONTEND_PORT"
+echo "     Backend:   http://localhost:$BACKEND_PORT"
+echo "     Health:    http://localhost:$BACKEND_PORT/health"
 echo "--------------------------------------------------"
