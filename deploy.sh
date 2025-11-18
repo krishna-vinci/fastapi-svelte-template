@@ -63,7 +63,7 @@ if command -v gh >/dev/null 2>&1; then
 
   echo "🌐 Creating GitHub repository via gh..."
   if gh repo create "${GITHUB_USERNAME}/${REPO_NAME}" ${VISIBILITY_FLAG} \
-      --source=. --remote=origin --push --branch main; then
+      --source=. --remote=origin --push; then
     REMOTE_SET=true
     GH_USED=true
     PUSHED_MAIN=true
