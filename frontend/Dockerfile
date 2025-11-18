@@ -1,5 +1,5 @@
-# Stage 1: Build the application
-FROM node:20-alpine AS builder
+# Development & Production Dockerfile for SvelteKit
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -10,22 +10,8 @@ RUN npm install
 # Copy the rest of the application source code
 COPY . .
 
-# Build the SvelteKit app
-RUN npm run build
-
-# Stage 2: Create the production image
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy the built app from the builder stage
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
-
 # Expose the port the app will run on
 EXPOSE 5173
 
-# Set the command to start the Node.js server
-# The SvelteKit node-adapter output is a standalone server
-CMD ["node", "build/index.js"]
+# Default to dev server (can be overridden in docker-compose)
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
