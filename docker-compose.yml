@@ -1,0 +1,48 @@
+version: '3.8'
+
+# This Docker Compose file is designed to work with a .env file.
+# The deploy_improved.sh script generates this .env file automatically.
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      # The host port is read from the .env file. Defaults to 5173 if not set.
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      # The VITE_API_URL is passed from the .env file to the SvelteKit build process.
+      - VITE_API_URL=${VITE_API_URL}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      # These should be consistent with the DATABASE_URL in the .env file.
+      - POSTGRES_DB=${PROJECT_NAME:-myapp}_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1122
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
