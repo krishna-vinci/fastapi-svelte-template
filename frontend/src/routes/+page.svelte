@@ -14,7 +14,9 @@
   let error: string | null = null;
   let loading = true;
 
-  const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+  // Use relative path to leverage the server-side proxy (hooks.server.ts)
+  // This ensures requests work inside Docker and from remote clients
+  const API_URL = ''; 
 
   onMount(async () => {
     try {
