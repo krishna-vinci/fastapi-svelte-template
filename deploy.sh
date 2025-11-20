@@ -31,6 +31,15 @@ DATABASE_URL=postgresql://postgres:1122@db:5432/${REPO_NAME}_db
 BACKEND_PORT=${BACKEND_PORT}
 FRONTEND_PORT=${FRONTEND_PORT}
 VITE_API_URL=http://localhost:${BACKEND_PORT}
+
+# Server-side internal API URL
+API_BASE_URL=http://backend:8000
+
+# CORS Configuration
+CORS_ORIGINS=http://localhost:${FRONTEND_PORT},http://localhost:${BACKEND_PORT}
+
+# Public URL
+PUBLIC_URL=http://localhost:${FRONTEND_PORT}
 EOL
 
 echo "✅ .env created"

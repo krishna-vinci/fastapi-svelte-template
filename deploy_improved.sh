@@ -54,6 +54,18 @@ FRONTEND_PORT=${FRONTEND_PORT}
 # API Configuration for SvelteKit/Vite
 # The frontend will consume this variable
 VITE_API_URL=http://localhost:${BACKEND_PORT}
+
+# Server-side internal API URL
+# Inside Docker network, backend is reachable at http://backend:8000
+# (assuming standard internal port 8000 for FastAPI)
+API_BASE_URL=http://backend:8000
+
+# CORS Configuration
+# Allow requests from the frontend and the backend itself (for Swagger UI)
+CORS_ORIGINS=http://localhost:${FRONTEND_PORT},http://localhost:${BACKEND_PORT}
+
+# Public URL
+PUBLIC_URL=http://localhost:${FRONTEND_PORT}
 EOL
 
 # --- Git & GitHub Setup ---

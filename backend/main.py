@@ -24,7 +24,7 @@ app = FastAPI(
 
 # CORS configuration
 def build_allowed_origins() -> list[str]:
-    raw = os.getenv("CORS_ALLOW_ORIGINS")
+    raw = os.getenv("CORS_ORIGINS")
     if raw:
         if raw.strip() == "*":
             return ["*"]
