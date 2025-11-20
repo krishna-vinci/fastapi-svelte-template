@@ -27,6 +27,7 @@ echo "🌐 Frontend port: $FRONTEND_PORT"
 echo "🔧 Generating .env file..."
 cat > .env <<EOL
 # Project environment variables
+PROJECT_NAME=${REPO_NAME}
 DATABASE_URL=postgresql://postgres:1122@db:5432/${REPO_NAME}_db
 BACKEND_PORT=${BACKEND_PORT}
 FRONTEND_PORT=${FRONTEND_PORT}

@@ -42,6 +42,7 @@ echo "🔧 Configuring environment..."
 # Using a here-document (cat <<EOL) is safer and clearer than multiple sed commands.
 cat > .env <<EOL
 # Project-specific environment variables
+PROJECT_NAME=${PROJECT_NAME}
 
 # Database
 # Using a unique database name for the project
