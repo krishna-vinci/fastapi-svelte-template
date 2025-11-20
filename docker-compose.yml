@@ -35,9 +35,9 @@ services:
     image: postgres:15
     environment:
       # These should be consistent with the DATABASE_URL in the .env file.
-      - POSTGRES_DB=${PROJECT_NAME:-myapp}_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=1122
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
