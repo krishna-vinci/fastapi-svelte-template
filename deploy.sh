@@ -11,15 +11,26 @@ fi
 # --- Get Project Details ---
 read -p "Enter new repository name: " REPO_NAME
 read -p "Enter GitHub username: " GITHUB_USERNAME
+read -p "Enter database user (default postgres): " DB_USER
+read -p "Enter database password (default 1122): " DB_PASSWORD
+read -p "Enter database name (default \${REPO_NAME}_db): " DB_NAME
 read -p "Enter backend port (default 8000): " BACKEND_PORT
 read -p "Enter frontend port (default 5173): " FRONTEND_PORT
 
 # Set defaults if input is empty
+# Sanitize REPO_NAME for default DB_NAME (lowercase, replace non-alphanumeric with _)
+SAFE_DB_NAME=$(echo "${REPO_NAME}_db" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]/_/g')
+
+DB_USER=${DB_USER:-postgres}
+DB_PASSWORD=${DB_PASSWORD:-1122}
+DB_NAME=${DB_NAME:-$SAFE_DB_NAME}
 BACKEND_PORT=${BACKEND_PORT:-8000}
 FRONTEND_PORT=${FRONTEND_PORT:-5173}
 
 echo ""
 echo "🚀 Setting up project: $REPO_NAME"
+echo "🗄️  Database user: $DB_USER"
+echo "🗄️  Database name: $DB_NAME"
 echo "📡 Backend port: $BACKEND_PORT"
 echo "🌐 Frontend port: $FRONTEND_PORT"
 
@@ -28,7 +39,15 @@ echo "🔧 Generating .env file..."
 cat > .env <<EOL
 # Project environment variables
 PROJECT_NAME=${REPO_NAME}
-DATABASE_URL=postgresql://postgres:1122@db:5432/${REPO_NAME}_db
+
+# Database Configuration
+POSTGRES_USER=${DB_USER}
+POSTGRES_PASSWORD=${DB_PASSWORD}
+POSTGRES_DB=${DB_NAME}
+
+# Database Connection String
+DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+
 BACKEND_PORT=${BACKEND_PORT}
 FRONTEND_PORT=${FRONTEND_PORT}
 VITE_API_URL=http://localhost:${BACKEND_PORT}
