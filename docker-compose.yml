@@ -11,6 +11,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - BACKEND_PORT=${BACKEND_PORT:-8000}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     depends_on:
       db:
         condition: service_healthy
@@ -24,6 +25,8 @@ services:
     environment:
       # The VITE_API_URL is passed from the .env file to the SvelteKit build process.
       - VITE_API_URL=${VITE_API_URL}
+      # Internal URL for server-side proxying via hooks.server.ts
+      - API_BASE_URL=${API_BASE_URL:-http://backend:8000}
     depends_on:
       - backend
     restart: unless-stopped
