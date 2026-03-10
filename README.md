@@ -14,15 +14,23 @@ A robust, production-ready starter template for building modern full-stack web a
 
 ## Quick Start
 
-### 1. Setup
-Run the deployment script to configure your environment (creates `.env`, sets up ports, and initializes git branches).
+### 1. Clone the template
+You can clone the template into a specific folder (e.g., `my-project`):
+
+```bash
+git clone https://github.com/krishna-vinci/fastapi-svelte-template.git my-project
+cd my-project
+```
+
+### 2. Setup
+Run the deployment script to configure your environment (creates `.env`, sets up ports, cleans the template's git history, and initializes a fresh git repository).
 **Note**: Ensure you have the GitHub CLI (`gh`) installed and authenticated if you want to automatically create and push the repository to GitHub.
 
 ```bash
 ./deploy.sh
 ```
 
-### 2. Development
+### 3. Development
 Start the development environment:
 ```bash
 ./dev.sh

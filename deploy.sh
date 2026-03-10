@@ -8,6 +8,12 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
+echo "🧹 Cleaning up existing git history for a fresh start..."
+rm -rf .git
+git init
+git add .
+git commit -m "Initial commit from template"
+
 # --- Get Project Details ---
 read -p "Enter new repository name: " REPO_NAME
 read -p "Enter GitHub username: " GITHUB_USERNAME
